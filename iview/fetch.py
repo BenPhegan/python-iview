@@ -8,20 +8,28 @@ from locale import getpreferredencoding
 from . import hds
 from urllib.parse import urlsplit, urljoin
 import sys
+import re
 
 def get_filename(url):
 	"""Generates a default file name from the media URL"""
 	return url.rsplit('/', 1)[-1].rsplit('.', 1)[0] + '.flv'
 
-def descriptive_filename(series, title):
+def descriptive_filename(series, title, urlpart):
 	"""Generates a more descriptive file name from the programme title"""
 	# if title contains program, remove duplication
 	title = title.replace(series + ' ', '')
 	ext = 'flv' # ABC always provides us with an FLV container
+
 	# for specials that title == program, just use program.ext
 	if series == title:
 		filename = "%s.%s" %(series, ext)
 	else:
+		# If we can get a SxEy show descriptor, lets use it.
+		match = re.match(r".*_(\d*)_(\d*)", urlpart)
+
+		if match:
+			title = title + ' - S' + match.group(1) + 'E' + match.group(2)
+
 		filename = "%s - %s.%s" %(series, title, ext)
 
 	# strip invalid filename characters < > : " / \ | ? *
